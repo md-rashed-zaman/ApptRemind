@@ -1,0 +1,1164 @@
+openapi: 3.0.3
+info:
+  title: ApptRemind Gateway API
+  version: v1
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /api/v1/auth/register:
+    post:
+      summary: Register a business owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            examples:
+              register:
+                value:
+                  email: "owner@example.com"
+                  password: "pass123"
+                  business_name: "Demo Biz"
+      responses:
+        "201":
+          description: Created
+  /api/v1/auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              login:
+                value:
+                  email: "owner@example.com"
+                  password: "pass123"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              examples:
+                tokens:
+                  value:
+                    access_token: "eyJhbGciOi..."
+                    refresh_token: "eyJhbGciOi..."
+                    token_type: "Bearer"
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+            examples:
+              refresh:
+                value:
+                  refresh_token: "eyJhbGciOi..."
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              examples:
+                tokens:
+                  value:
+                    access_token: "eyJhbGciOi..."
+                    refresh_token: "eyJhbGciOi..."
+                    token_type: "Bearer"
+  /api/v1/auth/logout:
+    post:
+      summary: Logout and revoke refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoutRequest"
+            examples:
+              logout:
+                value:
+                  refresh_token: "eyJhbGciOi..."
+      responses:
+        "204":
+          description: No Content
+  /api/v1/auth/me:
+    get:
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+              examples:
+                me:
+                  value:
+                    user_id: "3fdc7b0c-8a5c-4e55-bb2a-1b2c3d4e5f60"
+                    business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                    role: "owner"
+  /api/v1/auth/rotate:
+    post:
+      summary: Rotate JWT active key (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RotateRequest"
+            examples:
+              rotate:
+                value:
+                  active_kid: "kid-2026-01"
+      responses:
+        "204":
+          description: No Content
+  /api/v1/auth/audit:
+    get:
+      summary: List auth audit events (admin)
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+              examples:
+                audit:
+                  value:
+                    - id: 1
+                      event_type: "auth.login"
+                      actor_id: "3fdc7b0c-8a5c-4e55-bb2a-1b2c3d4e5f60"
+                      created_at: "2026-01-28T10:00:00Z"
+  /api/v1/business/profile:
+    get:
+      summary: Get business profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessProfile"
+              examples:
+                default:
+                  value:
+                    business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                    name: "Demo Salon"
+                    timezone: "UTC"
+                    reminder_offsets_minutes: [1440, 60]
+    put:
+      summary: Update business profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessProfileUpdateRequest"
+            examples:
+              update:
+                value:
+                  name: "Demo Salon"
+                  timezone: "UTC"
+                  reminder_offsets_minutes: [60]
+      responses:
+        "204":
+          description: No Content
+  /api/v1/business/services:
+    post:
+      summary: Create service
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessServiceCreateRequest"
+            examples:
+              consult:
+                value:
+                  name: "Consultation"
+                  duration_minutes: 30
+                  price: 25
+                  description: "Initial consult"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResponse"
+              examples:
+                created:
+                  value:
+                    id: "c6b6b7e0-7c2a-4a07-8a9f-1b2c3d4e5f60"
+    get:
+      summary: List services
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BusinessService"
+              examples:
+                list:
+                  value:
+                    - id: "c6b6b7e0-7c2a-4a07-8a9f-1b2c3d4e5f60"
+                      business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                      name: "Consultation"
+                      duration_minutes: 30
+                      price: "25.00"
+                      description: "Initial consult"
+                      created_at: "2026-01-28T10:00:00Z"
+  /api/v1/business/staff:
+    post:
+      summary: Add staff member
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffCreateRequest"
+            examples:
+              staff:
+                value:
+                  name: "Alice"
+                  is_active: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResponse"
+              examples:
+                created:
+                  value:
+                    id: "2d7f53f6-0b5f-4d0d-8f49-7a9c3b3b9c2a"
+    get:
+      summary: List staff
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Staff"
+              examples:
+                list:
+                  value:
+                    - id: "2d7f53f6-0b5f-4d0d-8f49-7a9c3b3b9c2a"
+                      business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                      name: "Alice"
+                      is_active: true
+  /api/v1/business/staff/working-hours:
+    get:
+      summary: List staff working hours (0=Sun..6=Sat)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: staff_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkingHours"
+              examples:
+                list:
+                  value:
+                    - staff_id: "2d7f53f6-0b5f-4d0d-8f49-7a9c3b3b9c2a"
+                      weekday: 1
+                      is_working: true
+                      start_minute: 540
+                      end_minute: 1020
+    put:
+      summary: Upsert a staff working-hours row
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: staff_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkingHoursUpsertRequest"
+            examples:
+              sunday:
+                value:
+                  weekday: 0
+                  is_working: true
+                  start_minute: 600
+                  end_minute: 840
+      responses:
+        "204":
+          description: No Content
+  /api/v1/business/staff/time-off:
+    post:
+      summary: Create staff time off (blackout)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: staff_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeOffCreateRequest"
+            examples:
+              blackout:
+                value:
+                  start_time: "2026-02-01T11:00:00Z"
+                  end_time: "2026-02-01T12:00:00Z"
+                  reason: "Doctor appointment"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResponse"
+              examples:
+                created:
+                  value:
+                    id: "1f6b7a2c-9a3b-4a1e-8b2c-4c5d6e7f8a90"
+    get:
+      summary: List staff time off (overlapping range)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: staff_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimeOff"
+              examples:
+                list:
+                  value:
+                    - id: "1f6b7a2c-9a3b-4a1e-8b2c-4c5d6e7f8a90"
+                      staff_id: "2d7f53f6-0b5f-4d0d-8f49-7a9c3b3b9c2a"
+                      start_time: "2026-02-01T11:00:00Z"
+                      end_time: "2026-02-01T12:00:00Z"
+                      reason: "Doctor appointment"
+                      created_at: "2026-01-28T10:05:00Z"
+    delete:
+      summary: Delete staff time off (by id)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+  /api/v1/public/slots:
+    get:
+      summary: Get available slots (public)
+      parameters:
+        - name: business_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: staff_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: service_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: duration_minutes
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 480
+          description: Booking duration in minutes (defaults to 30).
+        - name: slot_step_minutes
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 120
+          description: Slot step size in minutes (defaults to 15).
+        - name: workday_start
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "09:00"
+          description: Fallback local start time (HH:mm) when business-service is unavailable.
+        - name: workday_end
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "17:00"
+          description: Fallback local end time (HH:mm) when business-service is unavailable.
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+              examples:
+                slots:
+                  value:
+                    - start_time: "2026-01-28T14:00:00Z"
+                      end_time: "2026-01-28T14:25:00Z"
+                    - start_time: "2026-01-28T14:15:00Z"
+                      end_time: "2026-01-28T14:40:00Z"
+  /api/v1/public/book:
+    post:
+      summary: Book an appointment (public)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Optional idempotency key to safely retry booking requests.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingRequest"
+            examples:
+              booking:
+                value:
+                  business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                  staff_id: "2d7f53f6-0b5f-4d0d-8f49-7a9c3b3b9c2a"
+                  service_id: "c6b6b7e0-7c2a-4a07-8a9f-1b2c3d4e5f60"
+                  start_time: "2026-01-28T14:00:00Z"
+                  end_time: "2026-01-28T14:30:00Z"
+                  customer_name: "Sam Customer"
+                  customer_email: "sam@example.com"
+                  customer_phone: ""
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingResponse"
+              examples:
+                created:
+                  value:
+                    appointment_id: "b285af7d-8710-4549-b762-2a28d25ca690"
+  /api/v1/appointments:
+    get:
+      summary: List appointments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: business_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional override; otherwise derived from JWT.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppointmentSummary"
+              examples:
+                list:
+                  value:
+                    - appointment_id: "b285af7d-8710-4549-b762-2a28d25ca690"
+                      staff_id: "2d7f53f6-0b5f-4d0d-8f49-7a9c3b3b9c2a"
+                      service_id: "c6b6b7e0-7c2a-4a07-8a9f-1b2c3d4e5f60"
+                      start_time: "2026-01-28T14:00:00Z"
+                      end_time: "2026-01-28T14:30:00Z"
+                      status: "booked"
+                      created_at: "2026-01-28T10:10:00Z"
+  /api/v1/appointments/cancel:
+    post:
+      summary: Cancel appointment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelBookingRequest"
+            examples:
+              cancel:
+                value:
+                  business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                  appointment_id: "b285af7d-8710-4549-b762-2a28d25ca690"
+                  reason: "customer_request"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelBookingResponse"
+              examples:
+                canceled:
+                  value:
+                    appointment_id: "b285af7d-8710-4549-b762-2a28d25ca690"
+                    status: "cancelled"
+                    cancelled_at: "2026-01-28T12:00:00Z"
+  /api/v1/billing/checkout:
+    post:
+      summary: Create checkout session
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingCheckoutRequest"
+            examples:
+              starter:
+                value:
+                  tier: "starter"
+                  success_url: "http://localhost:8080/billing/success?session_id={CHECKOUT_SESSION_ID}"
+                  cancel_url: "http://localhost:8080/billing/cancel?session_id={CHECKOUT_SESSION_ID}"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingCheckoutResponse"
+              examples:
+                created:
+                  value:
+                    session_id: "cs_test_123"
+                    url: "https://checkout.stripe.com/pay/cs_test_123"
+  /api/v1/billing/checkout/session:
+    get:
+      summary: Get checkout session status (public)
+      parameters:
+        - in: query
+          name: session_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingCheckoutSessionStatus"
+              examples:
+                completed:
+                  value:
+                    session_id: "cs_test_123"
+                    tier: "starter"
+                    status: "completed"
+                    updated_at: "2026-01-28T10:10:00Z"
+                    completed_at: "2026-01-28T10:10:00Z"
+  /api/v1/billing/checkout/session/ack:
+    post:
+      summary: Acknowledge checkout return (public, token-protected)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingCheckoutAckRequest"
+            examples:
+              ack:
+                value:
+                  session_id: "cs_test_123"
+                  state: "return-token"
+                  result: "success"
+      responses:
+        "200":
+          description: OK
+  /api/v1/billing/subscription:
+    get:
+      summary: Get subscription status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: business_id
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingSubscriptionResponse"
+              examples:
+                active:
+                  value:
+                    business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                    tier: "starter"
+                    status: "active"
+                    updated_at: "2026-01-28T10:12:00Z"
+                    entitlements:
+                      tier: "starter"
+                      max_staff: 10
+                      max_services: 25
+                      max_monthly_appointments: 1000
+  /api/v1/billing/subscription/cancel:
+    post:
+      summary: Cancel subscription (Stripe)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingCancelSubscriptionRequest"
+            examples:
+              cancel:
+                value:
+                  business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              examples:
+                ok:
+                  value:
+                    status: "ok"
+  /api/v1/billing/webhooks/local:
+    post:
+      summary: Local billing webhook (simulate provider events)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalBillingWebhookRequest"
+            examples:
+              activated:
+                value:
+                  event_id: "evt-local-123"
+                  type: "subscription.activated"
+                  business_id: "9f5f9e1a-7f8d-4b9c-9f7b-1e8f0c1d2e3f"
+                  tier: "starter"
+                  occurred_at: "2026-01-28T10:00:00Z"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              examples:
+                ok:
+                  value:
+                    status: "ok"
+  /api/v1/billing/webhooks/stripe:
+    post:
+      summary: Stripe webhook (signature verified)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: OK
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    BillingCheckoutRequest:
+      type: object
+      required: [tier]
+      properties:
+        tier:
+          type: string
+          description: starter | pro
+        success_url:
+          type: string
+          description: Optional (falls back to CHECKOUT_SUCCESS_URL)
+        cancel_url:
+          type: string
+          description: Optional (falls back to CHECKOUT_CANCEL_URL)
+    BillingCheckoutResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+        url:
+          type: string
+    BillingCheckoutSessionStatus:
+      type: object
+      properties:
+        session_id:
+          type: string
+        tier:
+          type: string
+        status:
+          type: string
+        updated_at:
+          type: string
+        completed_at:
+          type: string
+        canceled_at:
+          type: string
+        expired_at:
+          type: string
+    BillingCheckoutAckRequest:
+      type: object
+      required: [session_id, state, result]
+      properties:
+        session_id:
+          type: string
+        state:
+          type: string
+          description: return token embedded into success/cancel URL
+        result:
+          type: string
+          description: success | cancel
+    Entitlements:
+      type: object
+      properties:
+        tier:
+          type: string
+        max_staff:
+          type: integer
+        max_services:
+          type: integer
+        max_monthly_appointments:
+          type: integer
+    BillingSubscriptionResponse:
+      type: object
+      properties:
+        business_id:
+          type: string
+        tier:
+          type: string
+        status:
+          type: string
+        updated_at:
+          type: string
+        entitlements:
+          $ref: "#/components/schemas/Entitlements"
+    BillingCancelSubscriptionRequest:
+      type: object
+      properties:
+        business_id:
+          type: string
+          description: admin only; otherwise derived from JWT
+    LocalBillingWebhookRequest:
+      type: object
+      required: [event_id, type, business_id, occurred_at]
+      properties:
+        event_id:
+          type: string
+        type:
+          type: string
+          description: subscription.activated | subscription.canceled
+        business_id:
+          type: string
+        tier:
+          type: string
+          description: required for subscription.activated
+        occurred_at:
+          type: string
+          description: RFC3339 timestamp (UTC recommended)
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        business_name:
+          type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+    LogoutRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+    MeResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+        business_id:
+          type: string
+        role:
+          type: string
+    RotateRequest:
+      type: object
+      required: [active_kid]
+      properties:
+        active_kid:
+          type: string
+    BusinessProfile:
+      type: object
+      properties:
+        business_id:
+          type: string
+        name:
+          type: string
+        timezone:
+          type: string
+        reminder_offsets_minutes:
+          type: array
+          items:
+            type: integer
+    BusinessProfileUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        timezone:
+          type: string
+        reminder_offsets_minutes:
+          type: array
+          items:
+            type: integer
+    BusinessServiceCreateRequest:
+      type: object
+      required: [name, duration_minutes, price]
+      properties:
+        name:
+          type: string
+        duration_minutes:
+          type: integer
+        price:
+          type: number
+          format: float
+        description:
+          type: string
+    BusinessService:
+      type: object
+      properties:
+        id:
+          type: string
+        business_id:
+          type: string
+        name:
+          type: string
+        duration_minutes:
+          type: integer
+        price:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    StaffCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        is_active:
+          type: boolean
+    Staff:
+      type: object
+      properties:
+        id:
+          type: string
+        business_id:
+          type: string
+        name:
+          type: string
+        is_active:
+          type: boolean
+    WorkingHours:
+      type: object
+      properties:
+        staff_id:
+          type: string
+        weekday:
+          type: integer
+        is_working:
+          type: boolean
+        start_minute:
+          type: integer
+        end_minute:
+          type: integer
+    WorkingHoursUpsertRequest:
+      type: object
+      required: [weekday, is_working]
+      properties:
+        weekday:
+          type: integer
+        is_working:
+          type: boolean
+        start_minute:
+          type: integer
+        end_minute:
+          type: integer
+    IdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+    TimeOffCreateRequest:
+      type: object
+      required: [start_time, end_time]
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        reason:
+          type: string
+    TimeOff:
+      type: object
+      properties:
+        id:
+          type: string
+        staff_id:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    BookingRequest:
+      type: object
+      required: [business_id, staff_id, service_id, start_time, end_time, customer_name]
+      properties:
+        business_id:
+          type: string
+        staff_id:
+          type: string
+        service_id:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        customer_name:
+          type: string
+        customer_email:
+          type: string
+          format: email
+        customer_phone:
+          type: string
+    BookingResponse:
+      type: object
+      properties:
+        appointment_id:
+          type: string
+    Slot:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+    CancelBookingRequest:
+      type: object
+      required: [business_id, appointment_id]
+      properties:
+        business_id:
+          type: string
+        appointment_id:
+          type: string
+        reason:
+          type: string
+    CancelBookingResponse:
+      type: object
+      properties:
+        appointment_id:
+          type: string
+        status:
+          type: string
+        cancelled_at:
+          type: string
+          format: date-time
+    AppointmentSummary:
+      type: object
+      properties:
+        appointment_id:
+          type: string
+        staff_id:
+          type: string
+        service_id:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status:
+          type: string
+        cancelled_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time

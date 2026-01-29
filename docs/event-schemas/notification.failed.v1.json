@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "notification.failed.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "appointment_id": { "type": "string", "format": "uuid" },
+    "business_id": { "type": "string", "format": "uuid" },
+    "channel": { "type": "string", "enum": ["email", "sms"] },
+    "error_reason": { "type": "string" },
+    "failed_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["appointment_id", "business_id", "channel", "error_reason", "failed_at"]
+}

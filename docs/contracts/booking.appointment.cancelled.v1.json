@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "booking.appointment.cancelled.v1",
+  "title": "booking.appointment.cancelled.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "appointment_id",
+    "business_id",
+    "staff_id",
+    "service_id",
+    "start_time",
+    "end_time",
+    "cancelled_at"
+  ],
+  "properties": {
+    "appointment_id": {
+      "type": "string"
+    },
+    "business_id": {
+      "type": "string"
+    },
+    "staff_id": {
+      "type": "string"
+    },
+    "service_id": {
+      "type": "string"
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

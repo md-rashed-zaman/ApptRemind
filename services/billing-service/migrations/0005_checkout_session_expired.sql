@@ -1,0 +1,3 @@
+ALTER TABLE checkout_sessions
+ADD COLUMN IF NOT EXISTS expired_at TIMESTAMPTZ;
+

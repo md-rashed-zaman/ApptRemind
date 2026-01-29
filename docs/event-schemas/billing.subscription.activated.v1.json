@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "billing.subscription.activated.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "business_id": { "type": "string", "format": "uuid" },
+    "tier": { "type": "string" },
+    "max_monthly_appointments": { "type": "integer" },
+    "activated_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["business_id", "tier", "max_monthly_appointments", "activated_at"]
+}

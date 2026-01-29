@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DB_URL="${ANALYTICS_DATABASE_URL:-postgres://analytics_user:analytics_password@postgres:5432/analytics_db?sslmode=disable}"
+COMPOSE_FILE="${COMPOSE_FILE:-deploy/compose/docker-compose.yml}"
+
+run_psql() {
+  if command -v psql >/dev/null 2>&1; then
+    PGPASSWORD="analytics_password" psql "$DB_URL" "$@"
+    return 0
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    docker compose -f "$COMPOSE_FILE" exec -T postgres \
+      psql "postgres://analytics_user:analytics_password@localhost:5432/analytics_db?sslmode=disable" "$@"
+    return 0
+  fi
+
+  echo "psql not found and docker not available" >&2
+  return 1
+}
+
+run_psql <<'SQL'
+BEGIN;
+TRUNCATE TABLE daily_notification_metrics;
+INSERT INTO daily_notification_metrics (business_id, day, channel, sent_count, failed_count, updated_at)
+SELECT
+  business_id,
+  sent_at::date AS day,
+  channel,
+  SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS sent_count,
+  SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed_count,
+  now()
+FROM notification_metrics
+WHERE business_id IS NOT NULL
+GROUP BY business_id, day, channel;
+COMMIT;
+SQL
+
+echo "Rebuild complete."

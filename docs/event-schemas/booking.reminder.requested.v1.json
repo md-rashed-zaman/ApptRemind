@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "booking.reminder.requested.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "appointment_id": { "type": "string", "format": "uuid" },
+    "business_id": { "type": "string", "format": "uuid" },
+    "channel": { "type": "string", "enum": ["email", "sms"] },
+    "recipient": { "type": "string" },
+    "remind_at": { "type": "string", "format": "date-time" },
+    "template_data": { "type": "object", "additionalProperties": true }
+  },
+  "required": ["appointment_id", "business_id", "channel", "recipient", "remind_at", "template_data"]
+}

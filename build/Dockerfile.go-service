@@ -1,0 +1,40 @@
+ARG GO_VERSION=1.24
+FROM golang:${GO_VERSION}-alpine AS build
+
+WORKDIR /src
+
+ARG SERVICE
+ARG GO_TAGS
+
+COPY go.mod go.sum ./
+COPY vendor ./vendor
+COPY libs ./libs
+COPY protos ./protos
+COPY services/${SERVICE} ./services/${SERVICE}
+
+RUN if [ -n "${GO_TAGS}" ]; then \
+      go build -mod=vendor -tags "${GO_TAGS}" -trimpath -ldflags="-s -w" -o /out/service ./services/${SERVICE}/cmd/${SERVICE}; \
+    else \
+      go build -mod=vendor -trimpath -ldflags="-s -w" -o /out/service ./services/${SERVICE}/cmd/${SERVICE}; \
+    fi
+
+FROM alpine:3.19
+
+# Network hiccups when fetching APKINDEX can happen in CI/dev; retry a few times.
+RUN set -e; \
+    i=0; \
+    until apk add --no-cache ca-certificates tzdata; do \
+      i=$((i+1)); \
+      if [ "$i" -ge 5 ]; then \
+        echo "apk add failed after $i attempts" >&2; \
+        exit 1; \
+      fi; \
+      echo "apk add failed (attempt $i), retrying..." >&2; \
+      sleep $((i*2)); \
+    done
+
+RUN addgroup -S app && adduser -S app -G app
+USER app
+
+COPY --from=build /out/service /app/service
+ENTRYPOINT ["/app/service"]

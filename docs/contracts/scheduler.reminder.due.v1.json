@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "scheduler.reminder.due.v1",
+  "type": "object",
+  "required": ["appointment_id", "business_id", "channel", "recipient", "template_data", "remind_at"],
+  "properties": {
+    "appointment_id": {
+      "type": "string"
+    },
+    "business_id": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["email", "sms"]
+    },
+    "recipient": {
+      "type": "string"
+    },
+    "remind_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "template_data": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

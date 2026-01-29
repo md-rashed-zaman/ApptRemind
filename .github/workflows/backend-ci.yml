@@ -1,0 +1,32 @@
+name: backend-ci
+
+on:
+  push:
+    paths:
+      - "services/**"
+      - "libs/**"
+      - "protos/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "services/**"
+      - "libs/**"
+      - "protos/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21.x"
+
+      - name: Go test
+        run: go test ./...

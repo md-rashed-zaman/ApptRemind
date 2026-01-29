@@ -1,0 +1,20 @@
+{
+  "name": "@apptremind/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "gen": "openapi-typescript ../../openapi/gateway.v1.yaml -o src/openapi.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.10.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.9"
+  }
+}

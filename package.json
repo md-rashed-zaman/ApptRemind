@@ -1,0 +1,14 @@
+{
+  "name": "apptremind-workspace",
+  "private": true,
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dev": "pnpm -C apps/web dev",
+    "build": "pnpm -C apps/web build",
+    "start": "pnpm -C apps/web start",
+    "ui:dev": "pnpm -C apps/ui-playground dev",
+    "api:gen": "pnpm -C packages/api gen",
+    "lint": "pnpm -C apps/web lint",
+    "typecheck": "pnpm -C apps/web typecheck"
+  }
+}

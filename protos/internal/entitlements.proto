@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package entitlements.v1;
+
+option go_package = "github.com/md-rashed-zaman/apptremind/protos/gen/entitlements/v1;entitlementsv1";
+
+message EntitlementsRequest {
+  string business_id = 1;
+}
+
+message EntitlementsResponse {
+  string tier = 1; // "free" or "pro"
+  uint32 max_staff = 2;
+  uint32 max_services = 3;
+  uint32 max_monthly_appointments = 4;
+}
+
+service EntitlementsService {
+  rpc GetEntitlements(EntitlementsRequest) returns (EntitlementsResponse);
+}

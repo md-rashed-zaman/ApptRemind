@@ -1,0 +1,4 @@
+ALTER TABLE outbox_events
+ADD COLUMN IF NOT EXISTS traceparent TEXT,
+ADD COLUMN IF NOT EXISTS tracestate TEXT;
+

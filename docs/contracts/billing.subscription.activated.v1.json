@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "billing.subscription.activated.v1",
+  "type": "object",
+  "required": ["business_id", "tier", "activated_at"],
+  "properties": {
+    "business_id": {
+      "type": "string"
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["free", "pro"]
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subscription_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

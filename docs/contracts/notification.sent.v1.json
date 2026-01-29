@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "notification.sent.v1",
+  "type": "object",
+  "required": ["appointment_id", "channel", "provider_id", "sent_at"],
+  "properties": {
+    "appointment_id": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["email", "sms"]
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

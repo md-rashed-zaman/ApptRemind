@@ -1,0 +1,56 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "docs/frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "docs/frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright browsers
+        run: pnpm -C apps/web exec playwright install --with-deps
+
+      - name: Start backend stack
+        run: docker compose -f deploy/compose/docker-compose.yml up -d
+
+      - name: Lint
+        run: pnpm -C apps/web lint
+
+      - name: Typecheck
+        run: pnpm -C apps/web typecheck
+
+      - name: Unit tests
+        run: pnpm -C apps/web test
+
+      - name: E2E tests
+        env:
+          PORT: "3000"
+        run: pnpm -C apps/web test:e2e
+
+      - name: Shutdown stack
+        if: always()
+        run: docker compose -f deploy/compose/docker-compose.yml down

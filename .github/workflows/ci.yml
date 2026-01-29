@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21.x"
+
+      - name: Install protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Generate protos
+        run: make proto
+
+      - name: Check generated protos are committed
+        run: ./scripts/check-proto-clean.sh
+
+      - name: OpenAPI contract check
+        run: ./scripts/check-openapi-sync.sh
+
+      - name: Event catalog check
+        run: ./scripts/check-events-consistency.sh
+
+      - name: Event schema check
+        run: ./scripts/check-event-schemas.sh
+
+      - name: Test
+        run: make test-proto

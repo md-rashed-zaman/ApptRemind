@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "auth.audit.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "event_type": { "type": "string" },
+    "actor_id": { "type": ["string", "null"], "format": "uuid" },
+    "metadata": { "type": "object", "additionalProperties": true },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["event_type", "metadata", "created_at"]
+}
