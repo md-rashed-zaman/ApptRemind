@@ -386,6 +386,10 @@ Publish test events:
 - K8s skeleton (optional): `deploy/k8s/README.md`
 
 ## Frontend (Next.js + TypeScript)
+The frontend is now implemented in `apps/web` with shadcn UI components and the core flows
+(auth, onboarding, availability, public booking demo, dashboard, billing). It’s functional but still
+needs visual polish and UX refinement.
+
 Frontend plan:
 - `docs/frontend/phases.md`
 
@@ -393,12 +397,12 @@ Run the Next.js app:
 ```bash
 corepack enable
 pnpm install
-pnpm dev
+pnpm -C apps/web dev
 ```
 
 Run the UI playground (Vite):
 ```bash
-pnpm ui:dev
+pnpm -C apps/ui-playground dev
 ```
 
 Generate TypeScript types from OpenAPI:
@@ -407,5 +411,6 @@ pnpm api:gen
 ```
 
 ## What’s Next
-Backend is done and fully tested. Frontend execution plan:
-- `docs/frontend/phases.md`
+- Continue frontend polish (layout, spacing, animations, empty states)
+- Add advanced UX for bookings, staff schedules, and analytics
+- Keep `docs/frontend/phases.md` updated as the UI matures
